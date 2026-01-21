@@ -11,7 +11,6 @@ from ._config import (
     add_alias,
     get_alias,
     list_templates,
-    load_config,
     remove_alias,
 )
 
@@ -100,11 +99,7 @@ def _parse_extra_context(items: Optional[List[str]]) -> dict:
 
 
 def cmd_new(args: argparse.Namespace) -> int:
-    tmpl_name = args.type or load_config().get("default_template")
-    if not tmpl_name:
-        builtin_names = [n for n, t in list_templates().items() if t == "builtin"]
-        tmpl_name = builtin_names[0] if builtin_names else None
-
+    tmpl_name = args.type
     if not tmpl_name:
         print(
             "[ERROR] テンプレートが決定できません。--type を指定してください",
@@ -130,14 +125,14 @@ def cmd_new(args: argparse.Namespace) -> int:
         extra_ctx[prefix_key] = prefix
 
     try:
-        result = cookiecutter(
+        workdir_path = cookiecutter(
             template_ref,
-            no_input=args.no_input,
+            no_input=(not args.use_input),
             extra_context=extra_ctx,
             output_dir=args.output,
             overwrite_if_exists=False,
         )
-        print(result)
+        print(f"[INFO] '{tmpl_name}'から作業ディレクトリ({workdir_path})を作成しました")
     except Exception as exc:  # pragma: no cover
         print(f"[ERROR] Cookiecutter 実行エラー: {exc}", file=sys.stderr)
         return 1
@@ -191,14 +186,18 @@ def cmd_version(_: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="workdir",
-        description="作業ディレクトリ（プロジェクト雛形）を Cookiecutter で生成する CLI ツール",
+        description="Cookiecutterの雛形から作業ディレクトリを生成する CLI ツール",
     )
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     # new
     p_new = sub.add_parser("new", help="テンプレートから新規プロジェクト作成")
     p_new.add_argument(
-        "-t", "--type", dest="type", help="使用テンプレート種別またはエイリアス"
+        "-t",
+        "--type",
+        dest="type",
+        help="使用テンプレート種別またはエイリアス",
+        required=True,
     )
     p_new.add_argument(
         "-o",
@@ -209,10 +208,10 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
     )
     p_new.add_argument(
-        "--no-input",
-        default=True,
+        "--use-input",
+        default=False,
         action="store_true",
-        help="対話入力を無効化 (CI 向け)",
+        help="対話入力を利用する (default: False)",
     )
     p_new.add_argument(
         "-c",
