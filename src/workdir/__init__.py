@@ -4,7 +4,6 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
-import yaml
 from cookiecutter.main import cookiecutter
 
 # ローカルモジュール
@@ -14,7 +13,6 @@ from ._config import (
     list_templates,
     load_config,
     remove_alias,
-    save_config,
 )
 
 import re
