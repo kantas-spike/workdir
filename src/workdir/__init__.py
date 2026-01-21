@@ -132,7 +132,11 @@ def cmd_new(args: argparse.Namespace) -> int:
             output_dir=args.output,
             overwrite_if_exists=False,
         )
-        print(f"[INFO] '{tmpl_name}'から作業ディレクトリ({workdir_path})を作成しました")
+        print(
+            f"[INFO] '{tmpl_name}'から作業ディレクトリ({workdir_path})を作成しました",
+            file=sys.stderr,
+        )
+        print(workdir_path)
     except Exception as exc:  # pragma: no cover
         print(f"[ERROR] Cookiecutter 実行エラー: {exc}", file=sys.stderr)
         return 1
